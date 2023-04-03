@@ -15,6 +15,8 @@ Spring Boot 2; Spring Web, Data, Cache; H2 database; Docker.
 Build and run:
 - Just use the 'run' button and spring boot built the app. You can use this app by this link: http://localhost:8080/swagger-ui/index.html
 - Docker:
-  - run this command "docker build -t cryptorecommendation:latest .";
-  - run this command "docker run -p 8081:8080 cryptorecommendation";
-  - open this link "http://localhost:8081/swagger-ui/index.html"
+  - run "mvn clean package"
+  - cd docker;
+  - run "docker-build.sh";
+  - run "docker-compose up -d";
+  - open this link "http://localhost:8080/swagger-ui/index.html"

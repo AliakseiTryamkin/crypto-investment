@@ -13,23 +13,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,8 +37,6 @@ import java.util.Objects;
 @Slf4j
 public class CryptoServiceImpl implements CryptoService {
 
-    private static final String FILE_DIR_INPUT = "src/main/resources/input";
-
     private static final String FILE_SUFFIX = "_values.csv";
     private static final String CRYPTO_TIMESTAMP_COLUMN = "timestamp";
     private static final String CRYPTO_SYMBOL_COLUMN = "symbol";
@@ -55,8 +45,6 @@ public class CryptoServiceImpl implements CryptoService {
 
     @Value("${files.input}")
     private String cryptoFilesPath;
-
-    private final ResourceLoader resourceLoader;
     private final CryptoValidationService cryptoValidationService;
     private final CryptoRecommendationService cryptoRecommendationService;
     private final CryptoMapper cryptoMapper;
