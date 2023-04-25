@@ -1,4 +1,4 @@
-package com.xmcy.cryptorecommendation.service;
+package com.xcmy.cryptorecommendation.validation;
 
 import com.xmcy.cryptorecommendation.dto.CryptoPriceDTO;
 

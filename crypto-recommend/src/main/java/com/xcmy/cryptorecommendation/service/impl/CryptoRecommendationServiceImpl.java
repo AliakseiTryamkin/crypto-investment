@@ -1,5 +1,6 @@
-package com.xmcy.cryptorecommendation.service.impl;
+package com.xcmy.cryptorecommendation.service.impl;
 
+import com.xcmy.cryptorecommendation.service.CryptoRecommendationService;
 import com.xmcy.cryptorecommendation.dto.CryptoNormalizedDTO;
 import com.xmcy.cryptorecommendation.dto.CryptoPriceDTO;
 import com.xmcy.cryptorecommendation.dto.CryptoStatsDTO;
@@ -7,7 +8,6 @@ import com.xmcy.cryptorecommendation.mapper.CryptoMapper;
 import com.xmcy.cryptorecommendation.mapper.CryptoStatsMapper;
 import com.xmcy.cryptorecommendation.repository.CryptoRepository;
 import com.xmcy.cryptorecommendation.repository.CryptoStatsRepository;
-import com.xmcy.cryptorecommendation.service.CryptoRecommendationService;
 import com.xmcy.cryptorecommendation.service.CryptoValidationService;
 import com.xmcy.cryptorecommendation.util.LocalDateTimeUtils;
 import lombok.RequiredArgsConstructor;

@@ -17,10 +17,10 @@ public interface CryptoService {
      */
     void saveCrypto(String symbol, List<CryptoPriceDTO> prices);
 
-    /**
-     * The method loads Crypto data from CSV files on ApplicationReadyEvent and store it.
-     */
-    @EventListener(ApplicationReadyEvent.class)
-    void loadAndSaveCryptos();
+        /**
+         * The method loads Crypto data from CSV files on ApplicationReadyEvent and store it.
+         */
+        @EventListener(ApplicationReadyEvent.class)
+        void loadAndSaveCryptos();
 
 }

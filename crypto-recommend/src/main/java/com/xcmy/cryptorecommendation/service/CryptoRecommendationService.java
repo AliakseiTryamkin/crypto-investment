@@ -1,4 +1,4 @@
-package com.xmcy.cryptorecommendation.service;
+package com.xcmy.cryptorecommendation.service;
 
 import com.xmcy.cryptorecommendation.dto.CryptoNormalizedDTO;
 import com.xmcy.cryptorecommendation.dto.CryptoStatsDTO;

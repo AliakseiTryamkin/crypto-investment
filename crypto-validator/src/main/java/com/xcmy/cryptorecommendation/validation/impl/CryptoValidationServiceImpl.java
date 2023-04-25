@@ -1,10 +1,10 @@
-package com.xmcy.cryptorecommendation.service.impl;
+package com.xcmy.cryptorecommendation.validation.impl;
 
+import com.xcmy.cryptorecommendation.validation.CryptoValidationService;
 import com.xmcy.cryptorecommendation.dto.CryptoPriceDTO;
 import com.xmcy.cryptorecommendation.exception.DevCustomCryptoException;
 import com.xmcy.cryptorecommendation.exception.ExceptionCode;
 import com.xmcy.cryptorecommendation.repository.CryptoRepository;
-import com.xmcy.cryptorecommendation.service.CryptoValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

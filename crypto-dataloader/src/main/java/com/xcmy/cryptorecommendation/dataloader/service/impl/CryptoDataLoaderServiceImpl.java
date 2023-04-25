@@ -1,14 +1,13 @@
-package com.xmcy.cryptorecommendation.service.impl;
+package com.xcmy.cryptorecommendation.dataloader.service.impl;
 
+import com.xcmy.cryptorecommendation.dataloader.service.CryptoDataLoaderService;
+import com.xcmy.cryptorecommendation.service.CryptoRecommendationService;
+import com.xcmy.cryptorecommendation.validation.CryptoValidationService;
 import com.xmcy.cryptorecommendation.dto.CryptoPriceDTO;
 import com.xmcy.cryptorecommendation.entity.CryptoEntity;
 import com.xmcy.cryptorecommendation.entity.CryptoPriceEntity;
 import com.xmcy.cryptorecommendation.mapper.CryptoMapper;
 import com.xmcy.cryptorecommendation.repository.CryptoRepository;
-import com.xmcy.cryptorecommendation.service.CryptoRecommendationService;
-import com.xmcy.cryptorecommendation.service.CryptoService;
-import com.xmcy.cryptorecommendation.service.CryptoValidationService;
-import com.xmcy.cryptorecommendation.util.TimestampUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -21,83 +20,76 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static java.util.stream.Collectors.groupingBy;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CryptoServiceImpl implements CryptoService {
+public class CryptoDataLoaderServiceImpl implements CryptoDataLoaderService {
 
     private static final String FILE_SUFFIX = "_values.csv";
     private static final String CRYPTO_TIMESTAMP_COLUMN = "timestamp";
     private static final String CRYPTO_SYMBOL_COLUMN = "symbol";
     private static final String CRYPTO_PRICE_COLUMN = "price";
 
-
     @Value("${files.input}")
     private String cryptoFilesPath;
-    private final CryptoValidationService cryptoValidationService;
+
     private final CryptoRecommendationService cryptoRecommendationService;
+
+    private final CryptoValidationService cryptoValidationService;
+
     private final CryptoMapper cryptoMapper;
+
     private final CryptoRepository cryptoRepository;
 
     @Override
+    public List<String> loadAndSaveCryptoData() {
+        log.info("Crypto data 'load' process has been started");
+
+        Map<String, List<CryptoPriceDTO>> cryptoData;
+        try {
+            cryptoData = loadCryptoData(cryptoFilesPath);
+        } catch (IOException e) {
+            //TODO add some custom exception and remove emptyList here
+            log.error("Crypto data did not loaded", e);
+            return Collections.emptyList();
+        }
+        log.info("Crypto data 'load' process has been completed: {}", cryptoData.keySet());
+
+        cryptoData.forEach(this::saveCrypto);
+        return Collections.emptyList();
+    }
+
     @Caching(evict = {
             @CacheEvict(value = "crypto", allEntries = true),
             @CacheEvict(value = "cryptos", allEntries = true)})
+    @Override
     public void saveCrypto(String symbol, List<CryptoPriceDTO> pricesDto) {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("asd");
-            }
-        });
-
         symbol = normalizeSymbol(symbol);
         cryptoValidationService.validateSave(symbol, pricesDto);
 
         List<CryptoPriceEntity> pricesEntities = pricesDto.stream()
                 .map(cryptoMapper::mapDtoToEntity)
                 .sorted(Comparator.comparing(CryptoPriceEntity::getDateTime))
-                .toList();
+                .collect(Collectors.toList());
 
         cryptoRepository.save(createCryptoEntity(symbol, pricesEntities));
         cryptoRecommendationService.saveCryptoStats(symbol, pricesEntities.get(0).getDateTime(),
-                 pricesEntities.get(pricesEntities.size() - 1).getDateTime());
-    }
-
-    @Override
-    public void loadAndSaveCryptos() {
-        log.info("Crypto data 'download' started");
-
-        Map<String, List<CryptoPriceDTO>> cryptoData;
-        try {
-            cryptoData = loadCryptoData(cryptoFilesPath);
-        } catch (IOException e) {
-            //TODO add some custom exception
-            log.error("Crypto data not downloaded", e);
-            return;
-        }
-        log.info("Crypto data 'download' completed: {}", cryptoData.keySet());
-
-        cryptoData.forEach(this::saveCrypto);
+                pricesEntities.get(pricesEntities.size() - 1).getDateTime());
     }
 
     private String normalizeSymbol(String symbol) {
@@ -105,21 +97,21 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     private Map<String, List<CryptoPriceDTO>> loadCryptoData(String path) throws IOException {
-        var cryptoData = new HashMap<String, List<CryptoPriceDTO>>();
-        var cryptoFileDirectory = ResourceUtils.getFile(path);
+        var cryptoDataMap = new HashMap<String, List<CryptoPriceDTO>>();
+        File cryptoFileDirectory = ResourceUtils.getFile(path);
         var cryptoFiles = FileUtils.listFiles(cryptoFileDirectory,
                         FileFilterUtils.suffixFileFilter(FILE_SUFFIX), null)
                 .stream()
                 .filter(Objects::nonNull)
-                .toList();
+                .collect(Collectors.toList());
 
         for (var cryptoFile : cryptoFiles) {
             var symbol = StringUtils.removeEnd(cryptoFile.getName(), FILE_SUFFIX);
             var prices = loadCryptoPricesFromCsvFile(cryptoFile.getAbsolutePath());
-            cryptoData.put(symbol, prices);
+            cryptoDataMap.put(symbol, prices);
         }
 
-        return cryptoData;
+        return cryptoDataMap;
     }
 
     private List<CryptoPriceDTO> loadCryptoPricesFromCsvFile(String filePath) throws IOException {
@@ -133,7 +125,7 @@ public class CryptoServiceImpl implements CryptoService {
                     .parse(reader);
 
             for (var csvRecord : csvRecords) {
-                var timestamp = TimestampUtils.parseTimestamp(csvRecord.get(CRYPTO_TIMESTAMP_COLUMN));
+                Timestamp timestamp = parseTimestamp(csvRecord.get(CRYPTO_TIMESTAMP_COLUMN));
                 var price = Double.parseDouble(csvRecord.get(CRYPTO_PRICE_COLUMN));
 
                 var priceDTO = new CryptoPriceDTO();
@@ -154,4 +146,7 @@ public class CryptoServiceImpl implements CryptoService {
                 .build();
     }
 
+    public static Timestamp parseTimestamp(String milliSecTimestamp) {
+        return StringUtils.isNotEmpty(milliSecTimestamp) ? new Timestamp(Long.parseLong(milliSecTimestamp)) : null;
+    }
 }
